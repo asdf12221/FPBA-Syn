@@ -29,7 +29,7 @@ VAL_DIR="${TRAIN_DATA}/val"
 VAL_IMG=$(ls "${TRAIN_DIR}/conditioning/" 2>/dev/null | head -1)
 if [ -z "$VAL_IMG" ]; then
     echo "ERROR: No conditioning images found in ${TRAIN_DIR}/conditioning/"
-    echo "Run prepare_finetune_data.py first!"
+    echo "Run airplane/prepare_sam_data.py first!"
     exit 1
 fi
 echo "Validation image: ${VAL_IMG}"

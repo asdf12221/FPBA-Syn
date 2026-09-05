@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*_output/
+*.png
+*.jpg
+*.pth
+*.log
+bg/
+final/
+masks/

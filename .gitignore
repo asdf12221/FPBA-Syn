@@ -8,3 +8,4 @@ __pycache__/
 bg/
 final/
 masks/
+!assets/

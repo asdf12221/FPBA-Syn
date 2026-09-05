@@ -12,15 +12,14 @@
 ## 结构
 
 ```
-├── finetune/         生成模型微调
-│   ├── train_inpaint_v4.py           ControlNet Inpainting 微调(发射车/舰船共用主训练,UNet 9 通道)
-│   ├── airplane/                     飞机域:earthsynth_1000_finaldatav2_airplane.py(1000 步)
-│   │                                 + prepare_finetune_data.py(MAR20-VOC 数据准备)+ train_kc10_lora.py(LoRA)
-│   └── ship/                         舰船域:earthsynth_v3zip_ship_gen50.py + prepare_inpaint_finetune_data.py
+├── finetune/         三类 EarthSynth 微调复现(准备 SAM 数据 + diffusers train_controlnet 微调)
+│   ├── airplane/         MAR20 → finetune_sam_5000(飞机)
+│   ├── launch_vehicle/   v5 FSC → finetune_fsc_ckpts(发射车)
+│   └── ship/             v3zip 舰船 → finetune_ship_1000
 ├── generate/        三类合成影像生成(完整一体脚本:Phase1 背景 + Stage3 Flux 成图)
-│   ├── earthsynth_finaldatav2_fsc_stage3.py       发射车
-│   ├── earthsynth_finaldatav2_ship_stage3.py      舰船
-│   └── earthsynth_finaldatav2_airplane.py         飞机(7,579 源 ×3)
+│   ├── earthsynth_finaldatav2_airplane.py         飞机 → finaldatav2_airplane_3x_output
+│   ├── earthsynth_finaldatav2_fsc_stage3.py       发射车 → finaldatav2_fsc_3x_output
+│   └── earthsynth_finaldatav2_ship_stage3.py      舰船 → finaldatav2_ship_3x_output
 ├── annotate/        标注整合:生成输出 + 源标注 → 训练 COCO json
 │   ├── make_synth_2of3_json.py(模板)
 │   └── build_3x_full.py / build_synth_full_2of3_json.py / build_train_ship3x_full.py
@@ -29,7 +28,7 @@
 
 ## 方法概述
 
-1. **微调(finetune/)**:以 EarthSynth(SD1.5+ControlNet)为基座,对目标类别域做微调(发射车/舰船用 ControlNet Inpainting 训练,飞机用 1000 步域微调与可选 LoRA),使模型学会在该类影像域生成/擦除。
+1. **微调(finetune/)**:每类独立复现 = `prepare_*_sam_data.py`(源图 + SAM 掩码 → conditioning/metadata)→ `train_earthsynth_*.sh`(HuggingFace diffusers `train_controlnet.py`:SD1.5 + EarthSynth 基座微调)。产物:飞机 `finetune_sam_5000`、发射车 `finetune_fsc_ckpts`、舰船 `finetune_ship_1000`。
 2. **生成(generate/)**:每类一个一体脚本,两阶段:
    - Phase 1:微调 EarthSynth 将源影像中的目标擦除为干净背景(LaMa 辅助),输出 `bg/`;
    - Stage 3:Flux(Redux+Fill)在背景上重绘目标,输出每源多 rank 的 `final/*_rankK.png`(源去重后使用)。

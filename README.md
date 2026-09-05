@@ -1,5 +1,8 @@
 # FPBA-Syn: 遥感合成数据生成管线
 
+**FPBA-Syn(Foreground-Preserving and Background-Adaptive Synth Pipeline)**——面向遥感目标检测的合成数据生成管线:
+**背景自适应**(目标经微调 EarthSynth 擦除后按场景生成)→ **前景保留**(Stage3 在原位重绘/重建目标),产出可控、域一致的合成影像。
+
 <p align="center"><img src="assets/FPBA-Syn.png" width="60%"></p>
 
 

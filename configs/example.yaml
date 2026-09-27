@@ -1,0 +1,34 @@
+name: example-vehicles
+
+dataset:
+  annotations: ${DATA_ROOT}/annotations_train.json
+  image_root: ${DATA_ROOT}/images
+  category_ids: [1]
+  conditioning_root: ${DATA_ROOT}/conditioning
+  # Optional COCO file used to exclude a validation split by image stem.
+  exclude_annotations: null
+  caption_fallback: "Aerial remote sensing image with an object"
+
+models:
+  sd15: ${MODEL_ROOT}/stable-diffusion-v1-5
+  controlnet: ${MODEL_ROOT}/earthsynth_controlnet
+  flux_root: ${MODEL_ROOT}
+  device: cuda
+  dtype: float16
+  offload: true
+  lama_device: cuda
+
+generation:
+  output_dir: ${OUTPUT_ROOT}/example
+  variants: 3
+  max_side: 896
+  phase1_steps: 20
+  phase1_guidance: 7.5
+  stage3_steps: 50
+  stage3_guidance: 30.0
+  stage3_strength: 0.4
+  stage3_prompt: "Aerial remote sensing image of an empty background"
+  seed: 2026
+  part_id: 0
+  num_parts: 1
+

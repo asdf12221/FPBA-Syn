@@ -8,4 +8,9 @@ __pycache__/
 bg/
 final/
 masks/
+outputs/
+dist/
+build/
+*.egg-info/
+.env
 !assets/*.png

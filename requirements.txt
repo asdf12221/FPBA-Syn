@@ -1,0 +1,4 @@
+-e .
+# Install the SAM implementation separately when generating conditioning masks:
+# git+https://github.com/facebookresearch/segment-anything.git
+

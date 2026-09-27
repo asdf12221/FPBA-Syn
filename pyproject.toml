@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fpba-syn"
+version = "0.1.0"
+description = "Configurable synthetic remote-sensing imagery generation with ControlNet, LaMa and Flux"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "accelerate>=0.30",
+  "diffusers>=0.30.3",
+  "numpy>=1.24",
+  "Pillow>=9.5",
+  "PyYAML>=6.0",
+  "simple-lama-inpainting",
+  "torch>=2.1",
+  "tqdm>=4.65",
+  "transformers>=4.40",
+]
+
+[project.scripts]
+fpba-syn = "fpba_syn.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["fpba_syn*"]
+

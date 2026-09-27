@@ -82,7 +82,10 @@ remote-sensing target categories:
 | Airplane | 20,472 | 92.3% | 93.1% |
 | FSC / launch vehicle | 1,455 | 83.5% | 83.4% |
 | Ship | 2,805 | 75.4% | 83.9% |
-| **Total** | **24,732** | — | — |
+| **Total** | **24,732** | **89.9%** | **91.5%** |
+
+The total precision and recall are image-count-weighted averages across the
+three categories.
 
 In one recorded downstream setup:
 

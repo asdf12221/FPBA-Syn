@@ -74,7 +74,7 @@ outputs are skipped, so interrupted jobs can be resumed safely.
 
 ## Milestones
 
-- **2026-9-5**：🎉 Congratulations！FPBA-Syn 项目成功在 **挑战杯“揭榜挂帅”专项赛 XH-202625** 初赛阶段取得 **前 20%** 的成绩 🚀
+- **2026-9-5**：🎉 Congratulations！FPBA-Syn 项目在 **挑战杯“揭榜挂帅”专项赛 XH-202625** 初赛阶段取得 **前 20%** 的成绩 🚀
 
 ## Reference results
 

@@ -1,104 +1,128 @@
+<div align="center">
+
 # FPBA-Syn
 
-**Foreground-Preserving and Background-Adaptive Synthetic Remote-Sensing Data Generation**
+### Foreground-Preserving · Background-Adaptive · Remote-Sensing Synthesis
 
-FPBA-Syn is a configurable framework for creating synthetic aerial and satellite
-images for object detection. It keeps the source object's location and geometry,
-adapts the surrounding scene, and produces an augmented COCO dataset without
-hard-coding a particular object class.
+Generate detection-ready aerial and satellite imagery while preserving the
+target location and adapting the surrounding scene.
 
-<p align="center">
-  <img src="assets/FPBA-Syn.png" alt="FPBA-Syn pipeline" width="920">
+<p>
+  <a href="https://github.com/asdf12221/FPBA-Syn"><img src="https://img.shields.io/badge/status-source--only-4c8bf5" alt="Source-only project"></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10 or newer">
+  <img src="https://img.shields.io/badge/Annotations-COCO-5965A8" alt="COCO annotations">
+  <img src="https://img.shields.io/badge/License-Apache--2.0-256A65" alt="Apache 2.0 license">
 </p>
 
-The framework is organized as three reusable stages:
+<p>
+  <a href="#overview">Overview</a> ·
+  <a href="#pipeline">Pipeline</a> ·
+  <a href="#reference-results">Results</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#project-layout">Layout</a>
+</p>
 
-1. **Data and mask preparation** — use COCO boxes and SAM to build conditioning
-   masks and captions.
-2. **Background synthesis** — fine-tuned EarthSynth/ControlNet generates a
-   clean scene, followed by LaMa inpainting to remove the original object.
-3. **Foreground-background composition** — Flux Redux + Fill redraws the target
-   in the preserved location and the annotation utility creates an augmented
-   COCO file.
+</div>
 
-## Why FPBA-Syn?
+<p align="center">
+  <img src="assets/FPBA-Syn.png" alt="FPBA-Syn generation pipeline" width="940">
+</p>
 
-- **Class-agnostic configuration:** categories, paths, prompts, sharding and
-  generation parameters live in YAML rather than category-specific scripts.
-- **Foreground preservation:** source COCO boxes are retained as a stable
-  starting point for downstream detection training.
-- **Background adaptation:** the scene is synthesized around the target instead
-  of simply copying an object onto a fixed background.
-- **Resumable and scalable:** existing outputs are skipped and jobs can be
-  split across GPUs or machines with `part_id` / `num_parts`.
-- **Auditable outputs:** each run writes manifests and separates background and
-  final images for inspection.
+> **In one sentence:** FPBA-Syn adapts the background around a known object,
+> redraws the object in place, and exports images plus COCO annotations for
+> downstream remote-sensing detection.
+
+## Overview
+
+FPBA-Syn is a configurable, class-agnostic synthesis framework for remote
+sensing. It starts from COCO images and bounding boxes, creates a compatible
+scene, preserves the target location, and produces an augmented COCO dataset.
+
+### Why use it?
+
+| Capability | What it provides |
+| --- | --- |
+| **Foreground preserving** | Keeps the source box as the spatial anchor for synthesis. |
+| **Background adaptive** | Generates the surrounding scene instead of pasting an object onto a fixed background. |
+| **Detection ready** | Writes generated images and COCO annotations for training pipelines. |
+| **Class agnostic** | Categories, paths, prompts and generation settings live in YAML. |
+| **Scalable** | Resumable jobs with `part_id` / `num_parts` for multi-GPU or multi-machine runs. |
+| **Auditable** | Separates background and final outputs and records manifests for inspection. |
+
+## Pipeline
+
+<table>
+<tr>
+<td width="33%" valign="top"><b>01 · Prepare</b><br><br>
+Build masks and conditioning captions from COCO boxes with SAM.<br><br>
+<code>COCO → masks + captions</code>
+</td>
+<td width="33%" valign="top"><b>02 · Adapt</b><br><br>
+Synthesize a compatible scene with EarthSynth/ControlNet and remove the source
+object with LaMa.<br><br>
+<code>conditioning → clean background</code>
+</td>
+<td width="33%" valign="top"><b>03 · Compose</b><br><br>
+Redraw the target in place with Flux Redux + Fill and export augmented labels.<br><br>
+<code>background → final image + COCO JSON</code>
+</td>
+</tr>
+</table>
+
+The generated filename convention is `<source_stem>_rank<N>.png`. Existing
+outputs are skipped, so interrupted jobs can be resumed safely.
 
 ## Reference results
 
-The reference experiments generated **24,732 final images** across three remote-
-sensing target categories:
+The recorded reference run generated **24,732 final images** across three
+remote-sensing target categories:
 
 | Category | Final images | Detector precision | Detector recall |
-| --- | ---: | ---: | ---: |
+| :--- | ---: | ---: | ---: |
 | Airplane | 20,472 | 92.3% | 93.1% |
 | FSC / launch vehicle | 1,455 | 83.5% | 83.4% |
 | Ship | 2,805 | 75.4% | 83.9% |
+| **Total** | **24,732** | — | — |
 
-The detector audit uses class-matched greedy matching at IoU >= 0.5. It measures
-object detectability and localization, not human perceptual quality or FID.
+In one recorded downstream setup:
 
-For one recorded downstream setup, a detector pretrained on the filtered
-synthetic set reached **0.683 bbox mAP** (mAP50 0.932, mAP75 0.835). Fine-tuning
-that model on real data reached **0.739 mAP** (mAP50 0.948, mAP75 0.889).
+| Training setup | bbox mAP | mAP50 | mAP75 |
+| --- | ---: | ---: | ---: |
+| Filtered synthetic pretraining | 0.683 | 0.932 | 0.835 |
+| Fine-tuned on real data | **0.739** | **0.948** | **0.889** |
 
-See [`docs/experiments.md`](docs/experiments.md) for training settings,
-evaluation details, and reproducibility limitations.
+The detector audit uses class-matched greedy matching at IoU ≥ 0.5. These are
+reference-run numbers for pipeline validation, not a turnkey benchmark or a
+claim of human perceptual quality. See [`docs/experiments.md`](docs/experiments.md)
+for settings and limitations.
 
-## Installation
+## Quick start
 
-Use Python 3.10+ and install a CUDA-compatible PyTorch build first:
+### 1. Install
+
+Set up a CUDA-compatible PyTorch build first, then install the package:
 
 ```bash
 pip install -e .
 ```
 
-If you use the `prepare` command, install SAM as well:
+The optional `prepare` command also requires SAM:
 
 ```bash
 pip install git+https://github.com/facebookresearch/segment-anything.git
 ```
 
-The repository does **not** bundle weights or datasets. A full generation run
-requires local, licensed copies of:
+### 2. Configure and validate
 
-- Stable Diffusion 1.5
-- a fine-tuned EarthSynth ControlNet
-- `FLUX.1-dev`, `FLUX.1-Redux-dev`, and `FLUX.1-Fill-dev`
-- LaMa / `simple-lama-inpainting`
-- SAM ViT-B when creating conditioning data
-
-Check the licenses of all third-party models before redistribution.
-
-## Quick start
-
-Copy [`configs/example.yaml`](configs/example.yaml) and replace the path
-variables with your dataset, conditioning data, model directories and output
-directory.
-
-Validate dataset paths without requiring model directories:
+Copy [`configs/example.yaml`](configs/example.yaml), set your dataset/model
+paths, and validate the configuration before starting a long run:
 
 ```bash
 fpba-syn check --config configs/example.yaml --skip-models
-```
-
-Validate the complete configuration:
-
-```bash
 fpba-syn check --config configs/example.yaml
 ```
 
-### 1. Prepare SAM conditioning data
+### 3. Prepare conditioning data
 
 ```bash
 fpba-syn prepare \
@@ -110,19 +134,16 @@ fpba-syn prepare \
   --device cuda
 ```
 
-### 2. Run a smoke test
+### 4. Generate and annotate
+
+Start with one task, then scale out after the output looks correct:
 
 ```bash
 fpba-syn generate --config configs/example.yaml --max-tasks 1
 ```
 
-To stop after background synthesis:
-
-```bash
-fpba-syn generate --config configs/example.yaml --phase1-only
-```
-
-### 3. Build an augmented COCO file
+To stop after background synthesis, add `--phase1-only`. Build the augmented
+COCO file from completed images with:
 
 ```bash
 fpba-syn annotate \
@@ -131,13 +152,28 @@ fpba-syn annotate \
   --output /data/train/annotations_synthetic.json
 ```
 
-Generated images follow `<source_stem>_rank<N>.png`. The annotation command
-copies source boxes to the generated images. If the redraw changes object
-geometry, run a separate detector or relabelling pass before publication.
+If the redraw changes object geometry, run a detector or relabelling pass
+before using the generated labels for a final benchmark.
 
-## Configuration
+## Models and configuration
 
-The example configuration supports:
+<details>
+<summary><b>Required model components</b></summary>
+
+Full generation requires local, licensed copies of:
+
+- Stable Diffusion 1.5
+- a fine-tuned EarthSynth ControlNet
+- `FLUX.1-dev`, `FLUX.1-Redux-dev`, and `FLUX.1-Fill-dev`
+- LaMa / `simple-lama-inpainting`
+- SAM ViT-B when creating conditioning data
+
+Check every third-party model and dataset license before redistribution.
+
+</details>
+
+<details>
+<summary><b>Minimal YAML example</b></summary>
 
 ```yaml
 dataset:
@@ -159,11 +195,12 @@ generation:
   num_parts: 1
 ```
 
-For multiple workers, keep `num_parts` fixed and assign each worker a unique
-`part_id`. The pipeline is safe to resume because completed output files are
-skipped.
+</details>
 
-## Repository layout
+For multiple workers, keep `num_parts` fixed and assign each worker a unique
+`part_id`.
+
+## Project layout
 
 ```text
 fpba_syn/                    reusable configuration, data and generation code
@@ -175,17 +212,22 @@ assets/FPBA-Syn.png          end-to-end framework diagram
 
 ## Reproducibility and limitations
 
-The published numbers are from an internal reference run; source datasets,
+The published numbers come from an internal reference run; source datasets,
 generated images and model weights are intentionally excluded. The inspected
 artifact directory did not contain the airplane fine-tuning checkpoint, the FSC
 conditioning snapshot differed from its preparation log, and one airplane
-manifest was incomplete relative to the final image directory. Re-run the
-pipeline with your own licensed data and weights before making a new benchmark
-claim.
+manifest was incomplete relative to the final image directory.
 
-The ship precision score is currently the main quality weakness. Improving
-small-object detail, validating copied boxes after redraw, and releasing fixed
-data/model manifests are the next steps toward a stronger public benchmark.
+Re-run the pipeline with your own licensed data and weights before making a new
+benchmark claim. Ship precision is currently the main quality weakness;
+small-object detail, post-redraw label validation, and fixed data/model
+manifests are the main areas for improvement.
+
+## Related detector pipeline
+
+Generated data can be used with the companion remote-sensing detector project:
+
+[**remote-dectection-mode** — InternImage-L · BiFPN · Cascade R-CNN · cRT](https://github.com/asdf12221/remote-dectection-mode)
 
 ## License
 

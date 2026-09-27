@@ -72,6 +72,10 @@ Redraw the target in place with Flux Redux + Fill and export augmented labels.<b
 The generated filename convention is `<source_stem>_rank<N>.png`. Existing
 outputs are skipped, so interrupted jobs can be resumed safely.
 
+## Milestones
+
+- **2026-9-5**：🎉 Congratulations！FPBA-Syn 项目成功在 **挑战杯“揭榜挂帅”专项赛 XH-202625** 初赛阶段取得 **前 20%** 的成绩 🚀
+
 ## Reference results
 
 The recorded reference run generated **24,732 final images** across three
